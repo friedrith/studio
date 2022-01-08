@@ -1,0 +1,1 @@
+tell application "iTerm2" to tell current window to set newWindow to (create tab with default profile)

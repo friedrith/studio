@@ -1,0 +1,1 @@
+relativeName: <%= project.relativeName %>

@@ -15,9 +15,11 @@ import { app, Tray, BrowserWindow, shell, ipcMain } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import log from 'electron-log'
 import { watch } from 'fs'
-import { configFilename } from './config'
-
-// import chokidar from 'chokidar';
+import { configFilename, getConfig } from './config'
+import WorkspacesWatcher from './WorkspacesWatcher'
+import TimeTracker from '../plugins/TimeTracker'
+import LinkTransformer from '../plugins/LinkTransformer'
+import Plugin from '../models/Plugin'
 
 import generateMenu from './tray-menu'
 
@@ -60,23 +62,23 @@ if (isDevelopment) {
   require('electron-debug')()
 }
 
-const installExtensions = async () => {
-  const installer = require('electron-devtools-installer')
-  const forceDownload = !!process.env.UPGRADE_EXTENSIONS
-  const extensions = ['REACT_DEVELOPER_TOOLS']
+// const installExtensions = async () => {
+//   const installer = require('electron-devtools-installer')
+//   const forceDownload = !!process.env.UPGRADE_EXTENSIONS
+//   const extensions = ['REACT_DEVELOPER_TOOLS']
 
-  return installer
-    .default(
-      extensions.map((name) => installer[name]),
-      forceDownload
-    )
-    .catch(console.log)
-}
+//   return installer
+//     .default(
+//       extensions.map((name) => installer[name]),
+//       forceDownload
+//     )
+//     .catch(console.log)
+// }
 
 const createWindow = async () => {
-  if (isDevelopment) {
-    await installExtensions()
-  }
+  // if (isDevelopment) {
+  //   await installExtensions()
+  // }
 
   const RESOURCES_PATH = app.isPackaged
     ? path.join(process.resourcesPath, 'assets')
@@ -94,9 +96,10 @@ const createWindow = async () => {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
+    titleBarStyle: 'hidden',
   })
 
-  mainWindow.loadURL(resolveHtmlPath('index.html'))
+  mainWindow.loadURL(resolveHtmlPath(''))
 
   mainWindow.on('ready-to-show', () => {
     if (!mainWindow) {
@@ -139,42 +142,25 @@ app.on('window-all-closed', () => {
   }
 })
 
-// const drive = `/Users/thibault/Google\ Drive/Projects`;
-
-// const projects: Array<Project> = [];
-
-// chokidar
-//   .watch('**/links.md', {
-//     cwd: drive,
-//     ignored: '*.(gdoc|xlsx|gsheet)',
-//     followSymlinks: false,
-//   })
-//   .on('add', (filepath) => {
-//     const fullFilePath = path.join(drive, filepath);
-//     if (fs.lstatSync(fullFilePath).isFile()) {
-//       const content = fs.readFileSync(fullFilePath, { encoding: 'utf8' });
-//       const json = markdown.parse(content);
-//       // console.log(json)
-
-//       const project = new Project();
-
-//       // eslint-disable-next-line prefer-destructuring
-//       project.name = json.find((l: Array<string>) => l[0] === 'header')[2];
-//       project.links = json
-//         .find((l: Array<string>) => l[0] === 'bulletlist')
-//         .slice(1)
-//         .map((l: any) => createMenuItem(l[1][0], l[1][1], l[1][2]));
-
-//       console.log(project);
-
-//       projects.push(project);
-//     }
-//   });
 let tray: Tray | null = null
 
-const refresh = async () => {
+const plugins: Array<Plugin> = [new TimeTracker(), new LinkTransformer()]
+
+const workspacesWatcher = new WorkspacesWatcher()
+
+const createTrayIcon = async () => {
   try {
-    const { menu, title } = await generateMenu(refresh, createWindow)
+    const { menu, title } = await generateMenu(
+      createTrayIcon,
+      workspacesWatcher.projects,
+      createWindow,
+      plugins
+    )
+
+    if (!tray) {
+      tray = new Tray(icon)
+    }
+
     tray?.setContextMenu(menu)
     tray?.setTitle(title)
   } catch (e) {
@@ -182,6 +168,18 @@ const refresh = async () => {
     console.log('error managed')
   }
 }
+
+workspacesWatcher.on('change', () => {
+  createTrayIcon()
+})
+
+plugins.forEach((plugin: Plugin) => {
+  plugin.on('change-tray', () => {
+    createTrayIcon()
+  })
+
+  plugin.init()
+})
 
 app
   .whenReady()
@@ -193,17 +191,14 @@ app
   //     if (mainWindow === null) createWindow()
   //   })
   // })
-  .then(() => generateMenu(refresh, createWindow))
-  .then(({ menu, title }) => {
-    tray = new Tray(icon)
-    tray.setContextMenu(menu)
-    tray.setTitle(title)
-  })
+  .then(getConfig)
+  .then((config) => workspacesWatcher.init(config))
+  .then(() => createTrayIcon())
   .then(() => {
     watch(configFilename, (eventType /* , filename */) => {
       if (eventType === 'change') {
         console.log('settings updated')
-        refresh()
+        createTrayIcon()
       }
     })
   })
