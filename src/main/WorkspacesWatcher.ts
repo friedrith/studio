@@ -5,12 +5,14 @@ import chokidar from 'chokidar'
 import Project from '../models/Project'
 import logger from '../utils/logger'
 
-import { parseMarkdown } from './utils/parsers'
+import { rewriteFrontMatter, parseMarkdown } from './utils/markdown-parser'
 
 // npx ts-node src/main/projects-watcher.ts
 
+const projectReadme = (project: Project) => path.join(project.path, `README.md`)
+
 const updateWithReadme = async (project: Project) => {
-  const readmeFilepath = path.join(project.path, `README.md`)
+  const readmeFilepath = projectReadme(project)
 
   try {
     const { id, name, links, alias } = await parseMarkdown(readmeFilepath)
@@ -22,75 +24,60 @@ const updateWithReadme = async (project: Project) => {
     // project.keyworkds = keywords
     project.configFilepaths.push(readmeFilepath)
   } catch (error) {
-    // logger.info(`no readme for ${project.path}`, { error })
+    logger.info(`no readme for ${project.path}`, { error })
   }
 }
 
-// const updateWithTeamConfig = async (project: Project) => {
-//   const teamConfigFilepath = path.join(project.path, `.studio.yml`)
-
-//   try {
-//     const teamConfig = await parseYaml(teamConfigFilepath)
-//     const { id, name, alias, links = [] } = teamConfig
-
-//     project.setId(id)
-//     project.setName(name)
-//     project.addLinks(links)
-//     project.setAlias(alias)
-//     project.configFilepaths.push(teamConfigFilepath)
-//   } catch (error) {
-//     // logger.info(`no team config for ${project.path}`, { error })
-//   }
-// }
-
-// const updateWithPersonalConfig = async (project: Project) => {
-//   const configFilepath = path.join(project.path, `.studio.p.yml`)
-
-//   try {
-//     const config = await parseYaml(configFilepath)
-//     const { name, alias, links = [] } = config
-//     project.setName(name)
-//     project.addLinks(links)
-//     project.setAlias(alias)
-//     project.configFilepaths.push(configFilepath)
-//   } catch (error) {
-//     // logger.info(`no personal config for ${project.path}`, { error })
-//   }
-// }
-
-const parseProject = async (filePath: string): Promise<Project | null> => {
+const parseProject = async (filePath: string): Promise<Project | undefined> => {
   try {
     const project = new Project()
 
     project.setPath(path.dirname(filePath))
-    project.setName(path.basename(project.path))
-    project.setId(project.path)
+    // project.setName(path.basename(project.path))
+    // project.setId(project.path)
 
     await updateWithReadme(project)
-    // await updateWithTeamConfig(project)
-    // await updateWithPersonalConfig(project)
 
     return project
-  } catch (err) {
+  } catch (error) {
     // When a request is aborted - err is an AbortError
-    // console.error(filePath, err)
+    logger.info(`impossible to parse project ${filePath}`, { error })
   }
-  return null
+  return undefined
 }
 
-// const parseWorkspaces = async () => {}
+const isGenerationRequired = (project: Project | undefined): boolean =>
+  project?.id === 'generate'
 
-// parseWorkspaces()
+const isInvalid = (project: Project | undefined): boolean =>
+  project == null || !project?.id
 
 export default class WorkspacesWatcher extends EventEmitter {
   projects: Array<Project> = []
 
   watcher
 
+  // eslint-disable-next-line class-methods-use-this
+  isProject(project: Project, filePath: string): boolean {
+    return project.configFilepaths.includes(filePath)
+  }
+
   findProject(filePath): Project | undefined {
-    return this.projects.find((p: Project) =>
-      p.configFilepaths.includes(filePath)
-    )
+    const dirname = path.dirname(filePath)
+
+    return this.projects.find((p) => p.path === dirname)
+  }
+
+  removeProject(project: string | Project) {
+    const dirname =
+      typeof project === 'string' ? path.dirname(project) : project?.path || ''
+    this.projects = this.projects.filter((p) => p.path !== dirname)
+    this.emit('change', dirname)
+  }
+
+  addProject(filePath, project) {
+    this.projects.push(project)
+    this.emit('change', filePath)
   }
 
   async init(config) {
@@ -105,43 +92,94 @@ export default class WorkspacesWatcher extends EventEmitter {
 
     this.watcher
       .on('add', async (filePath: string) => {
-        if (
-          !workspacePatterns.includes(filePath) &&
-          !this.findProject(filePath)
-        ) {
-          const project = await parseProject(filePath)
-          // console.log('project', project)
-          if (project !== null && project?.id) {
-            this.projects.push(project)
-
-            // this.watcher.add(
-            //   project.configFilepaths.filter(
-            //     (configFilepath: string) => configFilepath !== filePath
-            //   )
-            // )
-            this.emit('change', filePath)
-          }
+        if (this.findProject(filePath)) {
+          return
+        }
+        const project = await parseProject(filePath)
+        if (isInvalid(project)) {
+          return
+        }
+        if (isGenerationRequired(project)) {
+          await rewriteFrontMatter(filePath)
+        } else {
+          this.addProject(filePath, project)
         }
       })
       .on('change', async (filePath: string) => {
         logger.info(`File ${filePath} has been changed`)
 
-        if (!workspacePatterns.includes(filePath)) {
-          const project = this.findProject(filePath)
+        const project = await parseProject(filePath)
 
-          if (project) {
-            project.links = []
-            await updateWithReadme(project)
-            // await updateWithTeamConfig(project)
-            // await updateWithPersonalConfig(project)
-            this.emit('change', filePath)
+        const existingProject = this.findProject(filePath)
+
+        if (isInvalid(project)) {
+          if (existingProject) {
+            console.log('should remove')
+            this.removeProject(existingProject)
           }
+        } else if (isGenerationRequired(project)) {
+          await rewriteFrontMatter(filePath)
+          if (existingProject) {
+            this.removeProject(existingProject)
+          }
+        } else if (existingProject) {
+          existingProject.id = ''
+          existingProject.links = []
+          await updateWithReadme(existingProject)
+          this.emit('change', filePath)
+        } else {
+          this.addProject(filePath, project)
         }
 
-        this.emit('change', filePath)
+        // if (existingProject) {
+        // }
+
+        // if (existingProject) {
+        //   console.log('project registered')
+        //   existingProject.id = ''
+        //   existingProject.links = []
+        //   await updateWithReadme(existingProject)
+
+        //   if (!existingProject?.id || existingProject?.id === 'random') {
+        //     console.log('remove project')
+        //     this.projects = this.projects.filter(
+        //       (p) => !this.isProject(p, filePath)
+        //     )
+
+        //     if (existingProject?.id === 'random') {
+        //       console.log('rewrite', filePath)
+        //       await rewriteFrontMatter(filePath)
+        //     }
+        //   }
+        //   this.emit('change', filePath)
+
+        //   // await updateWithTeamConfig(project)
+        //   // await updateWithPersonalConfig(project)
+        // } else {
+        //   console.log('project not registered')
+
+        //   const project = await parseProject(filePath)
+        //   if (project !== null && project?.id !== 'random') {
+        //     this.projects.push(project)
+
+        //     // this.watcher.add(
+        //     //   project.configFilepaths.filter(
+        //     //     (configFilepath: string) => configFilepath !== filePath
+        //     //   )
+        //     // )
+        //     this.emit('change', filePath)
+        //   } else {
+        //     console.log('rewrite', filePath)
+        //     await rewriteFrontMatter(filePath)
+        //   }
+        // }
+
+        // this.emit('change', filePath)
       })
-      .on('unlink', (filePath) =>
+      .on('unlink', (filePath: string) => {
         logger.info(`File ${filePath} has been removed`)
-      )
+
+        this.removeProject(filePath)
+      })
   }
 }

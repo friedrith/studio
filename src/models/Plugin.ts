@@ -30,7 +30,7 @@ export default class Plugin extends EventEmitter {
   }
 
   // eslint-disable-next-line
-  async createMenu(_options: PluginOptions, _config: any) {
+  async createMenuItem(_options: PluginOptions, _config: any) {
     return {}
   }
 
@@ -58,14 +58,16 @@ export default class Plugin extends EventEmitter {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  transformLink(link: Link): Link {
-    return link
+  transformLinks(links: Array<Link>): Array<Link> {
+    return links
   }
 
-  static transformLink(plugins: Array<Plugin>) {
-    return (link: Link) =>
-      plugins
-        .filter(Plugin.onlyScope('link'))
-        .reduce((acc: Link, plugin: Plugin) => plugin.transformLink(acc), link)
+  static transformLinks(plugins: Array<Plugin>, links: Array<Link>) {
+    return plugins
+      .filter(Plugin.onlyScope('link'))
+      .reduce(
+        (acc: Array<Link>, plugin: Plugin) => plugin.transformLinks(acc),
+        links
+      )
   }
 }

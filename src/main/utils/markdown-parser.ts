@@ -1,7 +1,9 @@
-import { readFile } from 'fs/promises'
+import { readFile, writeFile } from 'fs/promises'
 import yaml from 'js-yaml'
 import { markdown } from 'markdown'
-import Project from 'models/Project'
+import { v4 as uuidv4 } from 'uuid'
+
+// import Project from 'models/Project'
 
 import Link from '../../models/Link'
 import ProjectInfos from '../../models/ProjectInfos'
@@ -60,44 +62,68 @@ export const parseMarkdown = async (
 
   const linksSectionIndex = findHeaderLinksIndex(tree)
 
-  if (linksSectionIndex >= 0) {
-    const list = tree[linksSectionIndex + 1]
-    if (list[0] === 'bulletlist') {
-      list.slice(1).forEach((item) => {
-        if (item[0] === 'listitem') {
-          findLinks(item.slice(1)).forEach((link: Link) => {
-            links.push(link)
-          })
-        }
-      })
-    }
-
-    const otherLinksIndex = tree.findIndex(
-      (line) => line[0] === 'para' && line[1].includes('other link')
-    )
-
-    const list2 = tree[otherLinksIndex + 1]
-    if (list2[0] === 'bulletlist') {
-      list2.slice(1).forEach((item) => {
-        if (item[0] === 'listitem') {
-          findLinks(item.slice(1)).forEach((link: Link) => {
-            links.push({
-              ...link,
-              stared: false,
+  try {
+    if (linksSectionIndex >= 0) {
+      const list = tree[linksSectionIndex + 1]
+      if (list[0] === 'bulletlist') {
+        list.slice(1).forEach((item) => {
+          if (item[0] === 'listitem') {
+            findLinks(item.slice(1)).forEach((link: Link) => {
+              links.push(link)
             })
-          })
-        }
-      })
+          }
+        })
+      }
+
+      const otherLinksIndex = tree.findIndex(
+        (line) => line[0] === 'para' && line[1].includes('other link')
+      )
+
+      const list2 = tree[otherLinksIndex + 1]
+      if (list2[0] === 'bulletlist') {
+        list2.slice(1).forEach((item) => {
+          if (item[0] === 'listitem') {
+            findLinks(item.slice(1)).forEach((link: Link) => {
+              links.push({
+                ...link,
+                stared: false,
+              })
+            })
+          }
+        })
+      }
     }
-  }
-  if (name === 'RIM-Nat') {
-    console.log('links', links)
+  } catch (error) {
+    // console.error('error', error, filePath)
   }
 
   return {
     name,
     links,
     ...frontMatter,
+  }
+}
+
+export const rewriteFrontMatter = async (filePath: string) => {
+  try {
+    const content = await readFile(filePath, { encoding: 'utf8' })
+
+    const frontMatter = parseYamlFrontMatter(content)
+
+    if (frontMatter.id === 'generate') {
+      let contentToAdd = ''
+      contentToAdd += `id: ${uuidv4()}`
+
+      if (!frontMatter.date) {
+        contentToAdd += `\ndate: ${new Date()}`
+      }
+
+      const newContent = content.replace('id: generate', contentToAdd)
+
+      await writeFile(filePath, newContent)
+    }
+  } catch (error) {
+    console.error('error', error)
   }
 }
 

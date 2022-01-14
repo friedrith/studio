@@ -18,7 +18,8 @@ import { watch } from 'fs'
 import { configFilename, getConfig } from './config'
 import WorkspacesWatcher from './WorkspacesWatcher'
 import TimeTracker from '../plugins/TimeTracker'
-import LinkTransformer from '../plugins/LinkTransformer'
+import DeepLinkTransformer from '../plugins/DeepLinkTransformer'
+import VSCode from '../plugins/VSCode'
 import Plugin from '../models/Plugin'
 
 import generateMenu from './tray-menu'
@@ -144,7 +145,11 @@ app.on('window-all-closed', () => {
 
 let tray: Tray | null = null
 
-const plugins: Array<Plugin> = [new TimeTracker(), new LinkTransformer()]
+const plugins: Array<Plugin> = [
+  new TimeTracker(),
+  new DeepLinkTransformer(),
+  new VSCode(),
+]
 
 const workspacesWatcher = new WorkspacesWatcher()
 

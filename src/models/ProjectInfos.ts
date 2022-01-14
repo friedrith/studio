@@ -8,4 +8,7 @@ export default interface ProjectInfos {
   path?: string
   links?: Array<Link>
   stared?: boolean
+  color?: string
+  studio?: boolean
+  date?: string
 }

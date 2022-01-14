@@ -33,7 +33,7 @@ export default class TimeTracker extends Plugin {
   constructor() {
     super('studio.time-tracker')
     this.chrono = 0
-    this.scopes = ['menu', 'data']
+    this.scopes = ['shortcuts', 'data']
   }
 
   async init() {
@@ -178,7 +178,7 @@ export default class TimeTracker extends Plugin {
     }
   }
 
-  async createMenu(data: PluginOptions, config: any) {
+  async createMenuItem(data: PluginOptions, config: any) {
     const { activeProject } = data
 
     await this.setActiveProject(activeProject)

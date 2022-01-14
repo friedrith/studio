@@ -6,10 +6,14 @@ import { getDb, saveDb } from './db'
 import Project from '../models/Project'
 import Link from '../models/Link'
 import Plugin, { PluginOptions } from '../models/Plugin'
-import runScript from './script'
 
 const isStared = (link: Link) => link.stared
 const isNotStared = (link: Link) => !isStared(link)
+
+const isStartedShortcutPlugin = (config) => (plugin) =>
+  (config.staredShortcuts || []).includes(plugin.id)
+const isNotStartedShortcutPlugin = (config) => (plugin) =>
+  !isStartedShortcutPlugin(config)(plugin)
 
 let contextMenu: Menu | null = null
 
@@ -40,6 +44,33 @@ const buildLinkMenuItem = (link: Link): any => ({
 
 const separator = (props = {}): any => ({ type: 'separator', ...props })
 
+const buildData = async (
+  plugins: Array<Plugin>,
+  originalData: PluginOptions
+): Promise<PluginOptions> => {
+  const dataPromises = plugins
+    .filter(Plugin.onlyScope('data'))
+    .map((plugin: Plugin) => plugin.getData(originalData))
+
+  const pluginsData = await Promise.all(dataPromises)
+
+  return pluginsData.reduce(
+    (acc: PluginOptions, pluginData: PluginOptions) => ({
+      ...acc,
+      ...pluginData,
+    }),
+    originalData
+  )
+}
+
+const buildShortcutMenuItems = async (plugins: Array<Plugin>, data, config) => {
+  const promise = plugins
+    .filter(Plugin.onlyScope('shortcuts'))
+    .map((plugin: Plugin) => plugin.createMenuItem(data, config))
+
+  return (await Promise.all(promise)).filter((item) => Boolean(item))
+}
+
 export default async (
   refresh: () => void,
   projects: Array<Project>,
@@ -55,24 +86,12 @@ export default async (
 
   const originalData: PluginOptions = { activeProject, projects }
 
-  const dataPromises = plugins
-    .filter(Plugin.onlyScope('data'))
-    .map((plugin: Plugin) => plugin.getData(originalData))
-
-  const pluginsData = await Promise.all(dataPromises)
-
-  const data: PluginOptions = pluginsData.reduce(
-    (acc: PluginOptions, pluginData: PluginOptions) => ({
-      ...acc,
-      ...pluginData,
-    }),
-    originalData
-  )
+  const data = await buildData(plugins, originalData)
 
   const title = config.menuTitle ? ejs.render(config.menuTitle, data) : ''
   const subTitle = config.subTitle ? ejs.render(config.subTitle, data) : ''
 
-  const links = (activeProject?.links || []).map(Plugin.transformLink(plugins))
+  const links = Plugin.transformLinks(plugins, activeProject?.links || [])
 
   if (db.mostRecentUsedProjects.length === 0) {
     db.mostRecentUsedProjects = projects.map((p: Project) => p.id)
@@ -104,11 +123,23 @@ export default async (
     ...notMostRecentUsedProjects,
   ].filter(Boolean)
 
-  const itemsPromises = plugins
-    .filter(Plugin.onlyScope('menu'))
-    .map((plugin: Plugin) => plugin.createMenu(data, config))
+  const staredShortcutPlugins = plugins.filter(isStartedShortcutPlugin(config))
 
-  const pluginItems = await Promise.all(itemsPromises)
+  const staredShortcutMenuItems = await buildShortcutMenuItems(
+    staredShortcutPlugins,
+    data,
+    config
+  )
+
+  const notStaredShortcutPlugins = plugins.filter(
+    isNotStartedShortcutPlugin(config)
+  )
+
+  const notStaredShortcutMenuItems = await buildShortcutMenuItems(
+    notStaredShortcutPlugins,
+    data,
+    config
+  )
 
   contextMenu = Menu.buildFromTemplate([
     new MenuItem({
@@ -116,8 +147,8 @@ export default async (
       enabled: false,
       visible: subTitle,
     }),
-    ...pluginItems,
-    separator({ visible: subTitle || pluginItems.length > 0 }),
+    ...staredShortcutMenuItems,
+    separator({ visible: subTitle || staredShortcutMenuItems.length > 0 }),
     {
       label: 'Change project',
       submenu: [
@@ -137,16 +168,24 @@ export default async (
     },
     separator(),
     {
-      label: 'Create Project',
-      click: async () => {
-        await runScript('open-iterm')
-      },
+      label: 'Shortcuts',
+      submenu: notStaredShortcutMenuItems,
+      visible: notStaredShortcutMenuItems.length > 0,
     },
+    // {
+    //   label: 'Create Project',
+    //   click: async () => {
+    //     await runScript('open-iterm')
+    //   },
+    // },
+    separator(),
     {
-      label: 'Open Project Configs',
+      label: 'Open Project Page',
       click: () => {
         activeProject?.configFilepaths.forEach((filepath: string) => {
-          shell.openExternal(`vscode://file${filepath}`)
+          shell.openExternal(
+            `obsidian://open?path=${filepath.replace('.md', '')}`
+          )
         })
       },
       visible: activeProject,
