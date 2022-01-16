@@ -2,18 +2,21 @@ import { Notification, clipboard } from 'electron'
 import fs from 'fs/promises'
 import path from 'path'
 
-import Plugin, { PluginOptions } from '../models/Plugin'
+// import PluginOptions from '../types/PluginOptions'
+import Link from '../types/Link'
+import Plugin from '../types/Plugin'
+import PluginOptions from '../types/PluginOptions'
 // import Project from '../models/Project'
 
 export default class VSCode extends Plugin {
   constructor() {
     super('studio.vscode')
-    this.scopes = ['menu', 'shortcuts']
+    this.scopes = ['shortcuts', 'links']
   }
 
   // eslint-disable-next-line class-methods-use-this
-  async createMenuItem(data: PluginOptions) {
-    const { activeProject } = data
+  async createShortcut(pluginOptions: PluginOptions): Promise<any> {
+    const { activeProject } = pluginOptions
 
     const enabled = !activeProject?.links.some((link) =>
       link.label.includes('VS Code')
@@ -53,5 +56,16 @@ export default class VSCode extends Plugin {
         }).show()
       },
     }
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  transformLinks(links: Array<Link>): Array<Link> {
+    return [
+      {
+        label: 'VS Code',
+        stared: true,
+      },
+      ...links,
+    ]
   }
 }

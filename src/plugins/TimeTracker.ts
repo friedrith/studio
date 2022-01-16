@@ -1,8 +1,9 @@
 import { Duration, DateTime } from 'luxon'
 
 import ejs from 'ejs'
-import Plugin, { PluginOptions } from '../models/Plugin'
-import Project from '../models/Project'
+import Plugin from '../types/Plugin'
+import Project from '../types/Project'
+import PluginOptions from '../types/PluginOptions'
 
 interface TimeTrackerOptions extends PluginOptions {
   isTracking: boolean
@@ -178,17 +179,17 @@ export default class TimeTracker extends Plugin {
     }
   }
 
-  async createMenuItem(data: PluginOptions, config: any) {
-    const { activeProject } = data
+  async createShortcut(pluginOptions: PluginOptions) {
+    const { activeProject } = pluginOptions
 
     await this.setActiveProject(activeProject)
 
     return {
       label: ejs.render(
         `${this.startDate ? 'Stop timer' : 'Start timer'} ${
-          config['studio.time-tracker.toggleLabel']
+          pluginOptions['studio.time-tracker.toggleLabel']
         }`,
-        data
+        pluginOptions
       ),
       click: async () => {
         this.emit('change-tray')

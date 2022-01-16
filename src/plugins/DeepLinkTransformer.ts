@@ -1,11 +1,11 @@
 import createDeepLink from 'desktop-deep-link'
-import Plugin from '../models/Plugin'
-import Link from '../models/Link'
+import Plugin from '../types/Plugin'
+import Link from '../types/Link'
 
 export default class DeepLinkTransformer extends Plugin {
   constructor() {
     super('studio.deep-link-transformer')
-    this.scopes = ['link']
+    this.scopes = ['links']
   }
 
   // eslint-disable-next-line class-methods-use-this

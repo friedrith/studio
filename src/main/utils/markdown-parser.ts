@@ -5,8 +5,8 @@ import { v4 as uuidv4 } from 'uuid'
 
 // import Project from 'models/Project'
 
-import Link from '../../models/Link'
-import ProjectInfos from '../../models/ProjectInfos'
+import Link from '../../types/Link'
+import ProjectInfos from '../../types/ProjectInfos'
 
 const findLinks = (content): Array<Link> => {
   if (content[0][0] === 'link') {

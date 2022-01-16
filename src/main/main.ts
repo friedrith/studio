@@ -15,12 +15,12 @@ import { app, Tray, BrowserWindow, shell, ipcMain } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import log from 'electron-log'
 import { watch } from 'fs'
-import { configFilename, getConfig } from './config'
+import { settingsFilename, getSettings } from './utils/settings'
 import WorkspacesWatcher from './WorkspacesWatcher'
 import TimeTracker from '../plugins/TimeTracker'
 import DeepLinkTransformer from '../plugins/DeepLinkTransformer'
 import VSCode from '../plugins/VSCode'
-import Plugin from '../models/Plugin'
+import Plugin from '../types/Plugin'
 
 import generateMenu from './tray-menu'
 
@@ -196,11 +196,11 @@ app
   //     if (mainWindow === null) createWindow()
   //   })
   // })
-  .then(getConfig)
+  .then(getSettings)
   .then((config) => workspacesWatcher.init(config))
   .then(() => createTrayIcon())
   .then(() => {
-    watch(configFilename, (eventType /* , filename */) => {
+    watch(settingsFilename, (eventType /* , filename */) => {
       if (eventType === 'change') {
         console.log('settings updated')
         createTrayIcon()

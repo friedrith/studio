@@ -1,19 +1,23 @@
 import { shell, clipboard, Menu, MenuItem } from 'electron'
 import ejs from 'ejs'
-import { getConfig, configFilename } from './config'
-import { getDb, saveDb } from './db'
+import { getSettings, settingsFilename } from './utils/settings'
+import { getDb, saveDb } from './utils/db'
 
-import Project from '../models/Project'
-import Link from '../models/Link'
-import Plugin, { PluginOptions } from '../models/Plugin'
+import Project from '../types/Project'
+import Link from '../types/Link'
+import Plugin from '../types/Plugin'
+import PluginOptions from '../types/PluginOptions'
+import Settings from '../types/Settings'
 
 const isStared = (link: Link) => link.stared
 const isNotStared = (link: Link) => !isStared(link)
 
-const isStartedShortcutPlugin = (config) => (plugin) =>
-  (config.staredShortcuts || []).includes(plugin.id)
-const isNotStartedShortcutPlugin = (config) => (plugin) =>
-  !isStartedShortcutPlugin(config)(plugin)
+const isStartedShortcutPlugin =
+  (pluginOptions: PluginOptions) => (plugin: Plugin) =>
+    (pluginOptions.staredShortcuts || []).includes(plugin.id)
+const isNotStartedShortcutPlugin =
+  (pluginOptions: PluginOptions) => (plugin: Plugin) =>
+    !isStartedShortcutPlugin(pluginOptions)(plugin)
 
 let contextMenu: Menu | null = null
 
@@ -44,13 +48,13 @@ const buildLinkMenuItem = (link: Link): any => ({
 
 const separator = (props = {}): any => ({ type: 'separator', ...props })
 
-const buildData = async (
+const buildPluginOptions = async (
   plugins: Array<Plugin>,
-  originalData: PluginOptions
+  originalPluginOptions: PluginOptions
 ): Promise<PluginOptions> => {
   const dataPromises = plugins
     .filter(Plugin.onlyScope('data'))
-    .map((plugin: Plugin) => plugin.getData(originalData))
+    .map((plugin: Plugin) => plugin.getData(originalPluginOptions))
 
   const pluginsData = await Promise.all(dataPromises)
 
@@ -59,17 +63,31 @@ const buildData = async (
       ...acc,
       ...pluginData,
     }),
-    originalData
+    originalPluginOptions
   )
 }
 
-const buildShortcutMenuItems = async (plugins: Array<Plugin>, data, config) => {
+const buildShortcutMenuItems = async (
+  plugins: Array<Plugin>,
+  pluginOptions: PluginOptions
+) => {
   const promise = plugins
     .filter(Plugin.onlyScope('shortcuts'))
-    .map((plugin: Plugin) => plugin.createMenuItem(data, config))
+    .map((plugin: Plugin) => plugin.createShortcut(pluginOptions))
 
-  return (await Promise.all(promise)).filter((item) => Boolean(item))
+  return (await Promise.all(promise)).filter((item) => item.label)
 }
+
+const buildLinks = (plugins: Array<Plugin>, links: Array<Link>) =>
+  plugins
+    .filter(Plugin.onlyScope('links'))
+    .reduce(
+      (acc: Array<Link>, plugin: Plugin) => plugin.transformLinks(acc),
+      links
+    )
+
+const renderTemplate = (property: string, pluginOptions: PluginOptions) =>
+  property ? ejs.render(property, pluginOptions) : ''
 
 export default async (
   refresh: () => void,
@@ -77,21 +95,26 @@ export default async (
   createWindow: () => void,
   plugins: Array<Plugin>
 ) => {
-  const config: any = await getConfig()
+  const settings: Settings = await getSettings()
   const db: any = await getDb()
 
   const activeProject: Project | undefined = projects.find(
     (p: Project) => p.id === db.active
   )
 
-  const originalData: PluginOptions = { activeProject, projects }
+  const originalPluginOptions: PluginOptions = {
+    activeProject,
+    projects,
+    ...settings,
+  }
 
-  const data = await buildData(plugins, originalData)
+  const pluginOptions = await buildPluginOptions(plugins, originalPluginOptions)
 
-  const title = config.menuTitle ? ejs.render(config.menuTitle, data) : ''
-  const subTitle = config.subTitle ? ejs.render(config.subTitle, data) : ''
+  const title = renderTemplate(settings.menuTitle, pluginOptions)
 
-  const links = Plugin.transformLinks(plugins, activeProject?.links || [])
+  const subTitle = renderTemplate(settings.subTitle, pluginOptions)
+
+  const links = buildLinks(plugins, activeProject?.links || [])
 
   if (db.mostRecentUsedProjects.length === 0) {
     db.mostRecentUsedProjects = projects.map((p: Project) => p.id)
@@ -123,22 +146,22 @@ export default async (
     ...notMostRecentUsedProjects,
   ].filter(Boolean)
 
-  const staredShortcutPlugins = plugins.filter(isStartedShortcutPlugin(config))
+  const staredShortcutPlugins = plugins.filter(
+    isStartedShortcutPlugin(pluginOptions)
+  )
 
   const staredShortcutMenuItems = await buildShortcutMenuItems(
     staredShortcutPlugins,
-    data,
-    config
+    pluginOptions
   )
 
   const notStaredShortcutPlugins = plugins.filter(
-    isNotStartedShortcutPlugin(config)
+    isNotStartedShortcutPlugin(pluginOptions)
   )
 
   const notStaredShortcutMenuItems = await buildShortcutMenuItems(
     notStaredShortcutPlugins,
-    data,
-    config
+    pluginOptions
   )
 
   contextMenu = Menu.buildFromTemplate([
@@ -193,7 +216,7 @@ export default async (
     {
       label: 'Open Settings File',
       click: () => {
-        shell.openExternal(`vscode://file${configFilename}`)
+        shell.openExternal(`vscode://file${settingsFilename}`)
       },
     },
     {
@@ -201,7 +224,7 @@ export default async (
       click: () => {
         refresh()
       },
-      visible: config.showRefresh,
+      visible: settings.showRefresh,
     },
     {
       label: 'Open Window',

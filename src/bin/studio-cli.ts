@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid'
 import commandLineArgs from 'command-line-args'
 import prompts from 'prompts'
 
-import Project from '../models/Project'
+import Project from '../types/Project'
 
 // npx ts-node ~/Code/studio/src/bin/studio-cli.ts --create
 

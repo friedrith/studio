@@ -2,7 +2,7 @@ import path from 'path'
 import EventEmitter from 'events'
 import chokidar from 'chokidar'
 
-import Project from '../models/Project'
+import Project from '../types/Project'
 import logger from '../utils/logger'
 
 import { rewriteFrontMatter, parseMarkdown } from './utils/markdown-parser'
