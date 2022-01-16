@@ -114,7 +114,6 @@ export default class WorkspacesWatcher extends EventEmitter {
 
         if (isInvalid(project)) {
           if (existingProject) {
-            console.log('should remove')
             this.removeProject(existingProject)
           }
         } else if (isGenerationRequired(project)) {
