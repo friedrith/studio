@@ -47,7 +47,10 @@ export default class Plugin extends EventEmitter {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  transformLinks(links: Array<Link>): Array<Link> {
+  transformLinks(
+    links: Array<Link>,
+    _pluginOptions: PluginOptions
+  ): Array<Link> {
     return links
   }
 

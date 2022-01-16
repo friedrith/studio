@@ -78,11 +78,16 @@ const buildShortcutMenuItems = async (
   return (await Promise.all(promise)).filter((item) => item.label)
 }
 
-const buildLinks = (plugins: Array<Plugin>, links: Array<Link>) =>
+const buildLinks = (
+  plugins: Array<Plugin>,
+  links: Array<Link>,
+  pluginOptions: PluginOptions
+) =>
   plugins
     .filter(Plugin.onlyScope('links'))
     .reduce(
-      (acc: Array<Link>, plugin: Plugin) => plugin.transformLinks(acc),
+      (acc: Array<Link>, plugin: Plugin) =>
+        plugin.transformLinks(acc, pluginOptions),
       links
     )
 
@@ -114,7 +119,7 @@ export default async (
 
   const subTitle = renderTemplate(settings.subTitle, pluginOptions)
 
-  const links = buildLinks(plugins, activeProject?.links || [])
+  const links = buildLinks(plugins, activeProject?.links || [], pluginOptions)
 
   if (db.mostRecentUsedProjects.length === 0) {
     db.mostRecentUsedProjects = projects.map((p: Project) => p.id)
