@@ -1,4 +1,5 @@
 import { shell, clipboard, Menu, MenuItem } from 'electron'
+import path from 'path'
 import ejs from 'ejs'
 import { getSettings, settingsFilename } from './utils/settings'
 import { getDb, saveDb } from './utils/db'
@@ -30,6 +31,7 @@ const buildProjectMenuItem = (
   type: 'radio',
   checked: project.id === activeProject?.id,
   click: () => onClick(project),
+  icon: path.join(__dirname, `../../assets/ranks/${project.rank}.png`),
 })
 
 const buildLinkMenuItem = (link: Link): any => ({

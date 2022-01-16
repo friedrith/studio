@@ -1,4 +1,5 @@
 import Link from './Link'
+import ProjectRank from './ProjectRank'
 
 export default class Project {
   id: string = ''
@@ -17,6 +18,8 @@ export default class Project {
 
   projects: Array<Project> = []
 
+  rank: ProjectRank = ProjectRank.Common
+
   setId(id: string | undefined) {
     this.id = id || this.id
   }
@@ -27,6 +30,15 @@ export default class Project {
 
   setPath(path: string) {
     this.path = path
+  }
+
+  setRank(rank: ProjectRank | undefined) {
+    console.log('setRank', this.name, rank)
+    if (rank !== undefined && Object.values(ProjectRank).includes(rank)) {
+      this.rank = rank
+    } else {
+      this.rank = ProjectRank.Common
+    }
   }
 
   setAlias(alias: string | undefined) {

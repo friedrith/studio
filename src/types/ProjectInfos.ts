@@ -1,4 +1,5 @@
 import Link from './Link'
+import ProjectRank from './ProjectRank'
 
 export default interface ProjectInfos {
   id?: string
@@ -11,4 +12,5 @@ export default interface ProjectInfos {
   color?: string
   studio?: boolean
   date?: string
+  rank?: ProjectRank
 }

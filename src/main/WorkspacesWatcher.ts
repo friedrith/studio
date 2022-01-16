@@ -15,9 +15,10 @@ const updateWithReadme = async (project: Project) => {
   const readmeFilepath = projectReadme(project)
 
   try {
-    const { id, name, links, alias } = await parseMarkdown(readmeFilepath)
+    const { id, name, links, alias, rank } = await parseMarkdown(readmeFilepath)
 
     project.setId(id)
+    project.setRank(rank)
     project.setName(name)
     project.addLinks(links)
     project.setAlias(alias)
