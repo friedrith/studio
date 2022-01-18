@@ -34,7 +34,7 @@ const parseProject = async (filePath: string): Promise<Project | undefined> => {
     const project = new Project()
 
     project.setPath(path.dirname(filePath))
-    // project.setName(path.basename(project.path))
+    project.setName(path.basename(project.path))
     // project.setId(project.path)
 
     await updateWithReadme(project)
