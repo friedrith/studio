@@ -3,6 +3,7 @@
 import EventEmitter from 'events'
 
 import { generateFilename, getJsonFile, saveJsonFile } from '../utils/json-file'
+import { getSettings } from '../main/utils/settings'
 
 import Link from './Link'
 import PluginOptions from './PluginOptions'
@@ -10,17 +11,19 @@ import PluginOptions from './PluginOptions'
 export default class Plugin extends EventEmitter {
   id: string = ''
 
-  configFilename: string = ''
+  databaseFilename: string = ''
 
   scopes: Array<string> = []
 
   constructor(id: string) {
     super()
     this.id = id
-    this.configFilename = generateFilename(this.id)
+    this.databaseFilename = generateFilename(this.id)
 
     this.scopes = []
   }
+
+  async reload() {}
 
   async createShortcut(_pluginOptions: PluginOptions) {
     return { label: null }
@@ -34,12 +37,16 @@ export default class Plugin extends EventEmitter {
   // eslint-disable-next-line class-methods-use-this
   async init(): Promise<void> {}
 
-  async getPluginConfig(defaultConfig) {
-    return getJsonFile(this.configFilename, defaultConfig)
+  async getPluginDataBase(defaultDatabase) {
+    return getJsonFile(this.databaseFilename, defaultDatabase)
   }
 
-  async savePluginConfig(newConfig) {
-    saveJsonFile(this.configFilename, newConfig)
+  async getPluginSettings(defaultSettings) {
+    return getSettings(defaultSettings)
+  }
+
+  async savePluginDatabase(newDatabase) {
+    saveJsonFile(this.databaseFilename, newDatabase)
   }
 
   static onlyScope(scope: string) {

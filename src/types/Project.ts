@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid'
+
 import Link from './Link'
 import ProjectRank from './ProjectRank'
 
@@ -33,7 +35,6 @@ export default class Project {
   }
 
   setRank(rank: ProjectRank | undefined) {
-    console.log('setRank', this.name, rank)
     if (rank !== undefined && Object.values(ProjectRank).includes(rank)) {
       this.rank = rank
     } else {
@@ -51,6 +52,10 @@ export default class Project {
     if (links) {
       this.links = [...links, ...this.links]
     }
+  }
+
+  generateRandomId(): string {
+    return `${this.name.toLowerCase().replace(/\s/g, '-')}-${uuidv4()}`
   }
 
   configFilepaths: Array<string> = []

@@ -38,7 +38,7 @@ export default class TimeTracker extends Plugin {
   }
 
   async init() {
-    this.config = await this.getPluginConfig([])
+    this.config = await this.getPluginDataBase([])
 
     const lastEntry =
       this.config.length > 0
@@ -65,7 +65,7 @@ export default class TimeTracker extends Plugin {
         ? { ...line, endDate: DateTime.now().toISO({ includeOffset: false }) }
         : line
     )
-    await this.savePluginConfig(this.config)
+    await this.savePluginDatabase(this.config)
 
     this.startDate = null
   }

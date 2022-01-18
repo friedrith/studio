@@ -1,7 +1,6 @@
 import { readFile, writeFile } from 'fs/promises'
 import yaml from 'js-yaml'
 import { markdown } from 'markdown'
-import { v4 as uuidv4 } from 'uuid'
 
 // import Project from 'models/Project'
 
@@ -104,7 +103,7 @@ export const parseMarkdown = async (
   }
 }
 
-export const rewriteFrontMatter = async (filePath: string) => {
+export const rewriteFrontMatter = async (newId: string, filePath: string) => {
   try {
     const content = await readFile(filePath, { encoding: 'utf8' })
 
@@ -112,7 +111,7 @@ export const rewriteFrontMatter = async (filePath: string) => {
 
     if (frontMatter.id === 'generate') {
       let contentToAdd = ''
-      contentToAdd += `id: ${uuidv4()}`
+      contentToAdd += `id: ${newId}`
 
       if (!frontMatter.date) {
         contentToAdd += `\ndate: ${new Date()}`

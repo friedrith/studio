@@ -155,11 +155,12 @@ const workspacesWatcher = new WorkspacesWatcher()
 
 const createTrayIcon = async () => {
   try {
+    const settings = await getSettings()
     const { menu, title } = await generateMenu(
       createTrayIcon,
       workspacesWatcher.projects,
       createWindow,
-      plugins
+      plugins.filter((p) => settings.pluginsEnabled.includes(p.id))
     )
 
     if (!tray) {

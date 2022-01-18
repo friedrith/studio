@@ -101,7 +101,8 @@ export default class WorkspacesWatcher extends EventEmitter {
           return
         }
         if (isGenerationRequired(project)) {
-          await rewriteFrontMatter(filePath)
+          const newId = project?.generateRandomId() || ''
+          await rewriteFrontMatter(newId, filePath)
         } else {
           this.addProject(filePath, project)
         }
@@ -118,7 +119,8 @@ export default class WorkspacesWatcher extends EventEmitter {
             this.removeProject(existingProject)
           }
         } else if (isGenerationRequired(project)) {
-          await rewriteFrontMatter(filePath)
+          const newId = project?.generateRandomId() || ''
+          await rewriteFrontMatter(newId, filePath)
           if (existingProject) {
             this.removeProject(existingProject)
           }

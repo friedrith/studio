@@ -7,7 +7,7 @@ import PluginOptions from '../types/PluginOptions'
 import Project from '../types/Project'
 
 export default class VSCode extends Plugin {
-  config: any
+  database: any
 
   constructor() {
     super('studio.vscode')
@@ -15,7 +15,7 @@ export default class VSCode extends Plugin {
   }
 
   async init() {
-    this.config = await this.getPluginConfig({ workspaceByProjectId: {} })
+    this.database = await this.getPluginDataBase({ workspaceByProjectId: {} })
   }
 
   async generateWorkspace(project: Project) {
@@ -38,9 +38,9 @@ export default class VSCode extends Plugin {
 
     await fs.writeFile(workspaceFilename, template)
 
-    this.config.workspaceByProjectId[project.id] = workspaceFilename
+    this.database.workspaceByProjectId[project.id] = workspaceFilename
 
-    this.savePluginConfig(this.config)
+    this.savePluginDatabase(this.database)
 
     this.emit('change-tray')
   }
@@ -55,7 +55,7 @@ export default class VSCode extends Plugin {
 
     return {
       label: 'Create VS Code Workspace',
-      enabled: !this.config?.workspaceByProjectId[activeProject?.id],
+      enabled: !this.database?.workspaceByProjectId[activeProject?.id],
       click: async () => {
         await this.generateWorkspace(activeProject)
       },
@@ -73,7 +73,7 @@ export default class VSCode extends Plugin {
       return links
     }
 
-    const workspace = this.config?.workspaceByProjectId[activeProject?.id]
+    const workspace = this.database?.workspaceByProjectId[activeProject?.id]
 
     if (workspace) {
       return [
