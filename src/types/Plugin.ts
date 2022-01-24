@@ -57,8 +57,8 @@ export default class Plugin extends EventEmitter {
   transformLinks(
     links: Array<Link>,
     _pluginOptions: PluginOptions
-  ): Array<Link> {
-    return links
+  ): Promise<Array<Link>> {
+    return Promise.resolve(links)
   }
 
   // static transformLinks(plugins: Array<Plugin>, links: Array<Link>) {

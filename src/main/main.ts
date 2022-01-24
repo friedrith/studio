@@ -17,9 +17,7 @@ import log from 'electron-log'
 import { watch } from 'fs'
 import { settingsFilename, getSettings } from './utils/settings'
 import WorkspacesWatcher from './WorkspacesWatcher'
-import TimeTracker from '../plugins/TimeTracker'
-import DeepLinkTransformer from '../plugins/DeepLinkTransformer'
-import VSCode from '../plugins/VSCode'
+import { enabledPlugins } from './plugins'
 import Plugin from '../types/Plugin'
 
 import generateMenu from './tray-menu'
@@ -145,12 +143,6 @@ app.on('window-all-closed', () => {
 
 let tray: Tray | null = null
 
-const plugins: Array<Plugin> = [
-  new TimeTracker(),
-  new DeepLinkTransformer(),
-  new VSCode(),
-]
-
 const workspacesWatcher = new WorkspacesWatcher()
 
 const createTrayIcon = async () => {
@@ -160,7 +152,7 @@ const createTrayIcon = async () => {
       createTrayIcon,
       workspacesWatcher.projects,
       createWindow,
-      plugins.filter((p) => settings.pluginsEnabled.includes(p.id))
+      enabledPlugins(settings)
     )
 
     if (!tray) {
@@ -179,14 +171,6 @@ workspacesWatcher.on('change', () => {
   createTrayIcon()
 })
 
-plugins.forEach((plugin: Plugin) => {
-  plugin.on('change-tray', () => {
-    createTrayIcon()
-  })
-
-  plugin.init()
-})
-
 app
   .whenReady()
   // .then(() => {
@@ -198,7 +182,17 @@ app
   //   })
   // })
   .then(getSettings)
-  .then((config) => workspacesWatcher.init(config))
+  .then((settings) => {
+    enabledPlugins(settings).forEach((plugin: Plugin) => {
+      plugin.on('change-tray', () => {
+        createTrayIcon()
+      })
+
+      plugin.init()
+    })
+    return settings
+  })
+  .then((settings) => workspacesWatcher.init(settings))
   .then(() => createTrayIcon())
   .then(() => {
     watch(settingsFilename, (eventType /* , filename */) => {

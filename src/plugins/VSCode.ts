@@ -66,26 +66,26 @@ export default class VSCode extends Plugin {
   transformLinks(
     links: Array<Link>,
     pluginOptions: PluginOptions
-  ): Array<Link> {
+  ): Promise<Array<Link>> {
     const { activeProject } = pluginOptions
 
     if (!activeProject) {
-      return links
+      return Promise.resolve(links)
     }
 
     const workspace = this.database?.workspaceByProjectId[activeProject?.id]
 
     if (workspace) {
-      return [
+      return Promise.resolve([
         {
           label: 'VS Code',
           stared: true,
           href: `vscode://file${workspace}`,
         },
         ...links,
-      ]
+      ])
     }
 
-    return links
+    return Promise.resolve(links)
   }
 }

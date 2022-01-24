@@ -16,11 +16,13 @@ export default class DeepLinkTransformer extends Plugin {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  transformLinks(links: Array<Link>): Array<Link> {
-    return links.map((link) =>
-      link.href
-        ? { ...link, href: createDeepLink(link.href, this.settings) }
-        : link
+  transformLinks(links: Array<Link>): Promise<Array<Link>> {
+    return Promise.resolve(
+      links.map((link) =>
+        link.href
+          ? { ...link, href: createDeepLink(link.href, this.settings) }
+          : link
+      )
     )
   }
 }

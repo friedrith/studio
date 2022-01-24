@@ -3,6 +3,7 @@ import path from 'path'
 import ejs from 'ejs'
 import { getSettings, settingsFilename } from './utils/settings'
 import { getDb, saveDb } from './utils/db'
+import projectSettings from './utils/project-settings'
 
 import Project from '../types/Project'
 import Link from '../types/Link'
@@ -45,7 +46,11 @@ const buildLinkMenuItem = (link: Link): any => ({
     if (link.clipboard) {
       clipboard.writeText(link.clipboard)
     }
+    if (link.click) {
+      link.click()
+    }
   },
+  submenu: link.submenu,
 })
 
 const separator = (props = {}): any => ({ type: 'separator', ...props })
@@ -80,7 +85,7 @@ const buildShortcutMenuItems = async (
   return (await Promise.all(promise)).filter((item) => item.label)
 }
 
-const buildLinks = (
+const buildLinks = async (
   plugins: Array<Plugin>,
   links: Array<Link>,
   pluginOptions: PluginOptions
@@ -88,9 +93,9 @@ const buildLinks = (
   plugins
     .filter(Plugin.onlyScope('links'))
     .reduce(
-      (acc: Array<Link>, plugin: Plugin) =>
-        plugin.transformLinks(acc, pluginOptions),
-      links
+      async (acc: Promise<Array<Link>>, plugin: Plugin) =>
+        plugin.transformLinks(await acc, pluginOptions),
+      Promise.resolve(links)
     )
 
 const renderTemplate = (property: string, pluginOptions: PluginOptions) =>
@@ -121,7 +126,11 @@ export default async (
 
   const subTitle = renderTemplate(settings.subTitle, pluginOptions)
 
-  const links = buildLinks(plugins, activeProject?.links || [], pluginOptions)
+  const links = await buildLinks(
+    plugins,
+    activeProject?.links || [],
+    pluginOptions
+  )
 
   if (db.mostRecentUsedProjects.length === 0) {
     db.mostRecentUsedProjects = projects.map((p: Project) => p.id)
@@ -221,11 +230,26 @@ export default async (
       visible: activeProject,
     },
     {
-      label: 'Open Settings File',
+      label: 'Open Global Settings',
       click: () => {
         shell.openExternal(`vscode://file${settingsFilename}`)
       },
     },
+    // {
+    //   label: 'Open Project Settings',
+    //   click: async () => {
+    //     if (activeProject) {
+    //       const filename = await projectSettings.createTemporarySettingsFile(
+    //         activeProject?.id
+    //       )
+
+    //       console.log('filename', filename)
+
+    //       shell.openExternal(`vscode://file${filename}`)
+    //     }
+    //   },
+    //   visible: activeProject,
+    // },
     {
       label: 'Refresh',
       click: () => {
