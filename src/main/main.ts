@@ -16,9 +16,9 @@ import { autoUpdater } from 'electron-updater'
 import log from 'electron-log'
 import { watch } from 'fs'
 import { settingsFilename, getSettings } from './utils/settings'
-import WorkspacesWatcher from './WorkspacesWatcher'
 import { enabledPlugins } from './plugins'
 import Plugin from '../types/Plugin'
+import Project from '../types/Project'
 
 import generateMenu from './tray-menu'
 
@@ -143,14 +143,23 @@ app.on('window-all-closed', () => {
 
 let tray: Tray | null = null
 
-const workspacesWatcher = new WorkspacesWatcher()
-
 const createTrayIcon = async () => {
   try {
     const settings = await getSettings()
+
+    const projects: Array<Project> = enabledPlugins(settings)
+      .filter(Plugin.onlyScope('loader'))
+      .reduce(
+        (acc: Array<Project>, plugin: Plugin) => [
+          ...acc,
+          ...plugin.getProjects(),
+        ],
+        []
+      )
+
     const { menu, title } = await generateMenu(
       createTrayIcon,
-      workspacesWatcher.projects,
+      projects,
       createWindow,
       enabledPlugins(settings)
     )
@@ -167,10 +176,6 @@ const createTrayIcon = async () => {
   }
 }
 
-workspacesWatcher.on('change', () => {
-  createTrayIcon()
-})
-
 app
   .whenReady()
   // .then(() => {
@@ -184,15 +189,14 @@ app
   .then(getSettings)
   .then((settings) => {
     enabledPlugins(settings).forEach((plugin: Plugin) => {
-      plugin.on('change-tray', () => {
+      plugin.on('reload-tray', () => {
         createTrayIcon()
       })
 
-      plugin.init()
+      plugin.init(settings)
     })
     return settings
   })
-  .then((settings) => workspacesWatcher.init(settings))
   .then(() => createTrayIcon())
   .then(() => {
     watch(settingsFilename, (eventType /* , filename */) => {

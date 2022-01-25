@@ -4,8 +4,8 @@ import { markdown } from 'markdown'
 
 // import Project from 'models/Project'
 
-import Link from '../../types/Link'
-import ProjectInfos from '../../types/ProjectInfos'
+import Link from '../types/Link'
+import ProjectInfos from '../types/ProjectInfos'
 
 const findLinks = (content): Array<Link> => {
   if (content[0][0] === 'link') {

@@ -203,7 +203,7 @@ export default class TimeTracker extends Plugin {
             projectId: activeProject?.id,
             projectName: activeProject?.name,
           })
-          await this.savePluginConfig(this.config)
+          await this.savePluginDatabase(this.config)
         } else {
           await this.stop()
         }

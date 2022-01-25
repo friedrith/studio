@@ -9,6 +9,7 @@ export const getJsonFile = (filename: string, defaultData: any): any =>
   fs
     .readFile(filename, { encoding: 'utf8' })
     .then(JSON.parse)
+    .then((data) => ({ ...defaultData, ...data }))
     .catch(() => defaultData)
 
 export const saveJsonFile = (filename: string, data: string) =>

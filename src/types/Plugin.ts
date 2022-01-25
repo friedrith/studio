@@ -7,6 +7,8 @@ import { getSettings } from '../main/utils/settings'
 
 import Link from './Link'
 import PluginOptions from './PluginOptions'
+import Settings from './Settings'
+import Project from './Project'
 
 export default class Plugin extends EventEmitter {
   id: string = ''
@@ -25,6 +27,10 @@ export default class Plugin extends EventEmitter {
 
   async reload() {}
 
+  emitReloadUi() {
+    this.emit('reload-tray')
+  }
+
   async createShortcut(_pluginOptions: PluginOptions) {
     return { label: null }
   }
@@ -35,14 +41,14 @@ export default class Plugin extends EventEmitter {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  async init(): Promise<void> {}
+  async init(_: Settings): Promise<void> {}
 
   async getPluginDataBase(defaultDatabase) {
     return getJsonFile(this.databaseFilename, defaultDatabase)
   }
 
-  async getPluginSettings(defaultSettings) {
-    return getSettings(defaultSettings)
+  async getSettings() {
+    return getSettings()
   }
 
   async savePluginDatabase(newDatabase) {
@@ -59,6 +65,10 @@ export default class Plugin extends EventEmitter {
     _pluginOptions: PluginOptions
   ): Promise<Array<Link>> {
     return Promise.resolve(links)
+  }
+
+  getProjects(): Array<Project> {
+    return []
   }
 
   // static transformLinks(plugins: Array<Plugin>, links: Array<Link>) {

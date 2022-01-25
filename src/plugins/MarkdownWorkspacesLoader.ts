@@ -1,11 +1,11 @@
 import path from 'path'
-import EventEmitter from 'events'
 import chokidar from 'chokidar'
 
+import Plugin from '../types/Plugin'
 import Project from '../types/Project'
 import logger from '../utils/logger'
 
-import { rewriteFrontMatter, parseMarkdown } from './utils/markdown-parser'
+import { rewriteFrontMatter, parseMarkdown } from '../utils/markdown-parser'
 
 // npx ts-node src/main/projects-watcher.ts
 
@@ -53,17 +53,22 @@ const isGenerationRequired = (project: Project | undefined): boolean =>
 const isInvalid = (project: Project | undefined): boolean =>
   project == null || !project?.id
 
-export default class WorkspacesWatcher extends EventEmitter {
+export default class MarkdownWorkspacesLoader extends Plugin {
   projects: Array<Project> = []
 
   watcher
+
+  constructor() {
+    super('studio.markdown-workspaces-loader')
+    this.scopes = ['loader']
+  }
 
   // eslint-disable-next-line class-methods-use-this
   isProject(project: Project, filePath: string): boolean {
     return project.configFilepaths.includes(filePath)
   }
 
-  findProject(filePath): Project | undefined {
+  findProject(filePath: string): Project | undefined {
     const dirname = path.dirname(filePath)
 
     return this.projects.find((p) => p.path === dirname)
@@ -73,12 +78,12 @@ export default class WorkspacesWatcher extends EventEmitter {
     const dirname =
       typeof project === 'string' ? path.dirname(project) : project?.path || ''
     this.projects = this.projects.filter((p) => p.path !== dirname)
-    this.emit('change', dirname)
+    this.emitReloadUi()
   }
 
-  addProject(filePath, project) {
+  addProject(_: string, project: Project) {
     this.projects.push(project)
-    this.emit('change', filePath)
+    this.emitReloadUi()
   }
 
   async init(config) {
@@ -103,7 +108,7 @@ export default class WorkspacesWatcher extends EventEmitter {
         if (isGenerationRequired(project)) {
           const newId = project?.generateRandomId() || ''
           await rewriteFrontMatter(newId, filePath)
-        } else {
+        } else if (project !== undefined) {
           this.addProject(filePath, project)
         }
       })
@@ -128,60 +133,19 @@ export default class WorkspacesWatcher extends EventEmitter {
           existingProject.id = ''
           existingProject.links = []
           await updateWithReadme(existingProject)
-          this.emit('change', filePath)
-        } else {
+          this.emitReloadUi()
+        } else if (project !== undefined) {
           this.addProject(filePath, project)
         }
-
-        // if (existingProject) {
-        // }
-
-        // if (existingProject) {
-        //   console.log('project registered')
-        //   existingProject.id = ''
-        //   existingProject.links = []
-        //   await updateWithReadme(existingProject)
-
-        //   if (!existingProject?.id || existingProject?.id === 'random') {
-        //     console.log('remove project')
-        //     this.projects = this.projects.filter(
-        //       (p) => !this.isProject(p, filePath)
-        //     )
-
-        //     if (existingProject?.id === 'random') {
-        //       console.log('rewrite', filePath)
-        //       await rewriteFrontMatter(filePath)
-        //     }
-        //   }
-        //   this.emit('change', filePath)
-
-        //   // await updateWithTeamConfig(project)
-        //   // await updateWithPersonalConfig(project)
-        // } else {
-        //   console.log('project not registered')
-
-        //   const project = await parseProject(filePath)
-        //   if (project !== null && project?.id !== 'random') {
-        //     this.projects.push(project)
-
-        //     // this.watcher.add(
-        //     //   project.configFilepaths.filter(
-        //     //     (configFilepath: string) => configFilepath !== filePath
-        //     //   )
-        //     // )
-        //     this.emit('change', filePath)
-        //   } else {
-        //     console.log('rewrite', filePath)
-        //     await rewriteFrontMatter(filePath)
-        //   }
-        // }
-
-        // this.emit('change', filePath)
       })
       .on('unlink', (filePath: string) => {
         logger.info(`File ${filePath} has been removed`)
 
         this.removeProject(filePath)
       })
+  }
+
+  getProjects(): Project[] {
+    return this.projects
   }
 }

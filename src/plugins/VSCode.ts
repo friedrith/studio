@@ -42,7 +42,7 @@ export default class VSCode extends Plugin {
 
     this.savePluginDatabase(this.database)
 
-    this.emit('change-tray')
+    this.reload()
   }
 
   // eslint-disable-next-line class-methods-use-this

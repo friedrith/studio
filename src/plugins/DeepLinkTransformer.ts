@@ -12,7 +12,7 @@ export default class DeepLinkTransformer extends Plugin {
   }
 
   async reload() {
-    this.settings = await this.getPluginSettings({})
+    this.settings = await this.getSettings()
   }
 
   // eslint-disable-next-line class-methods-use-this

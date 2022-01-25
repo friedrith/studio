@@ -3,7 +3,7 @@ import path from 'path'
 import ejs from 'ejs'
 import { getSettings, settingsFilename } from './utils/settings'
 import { getDb, saveDb } from './utils/db'
-import projectSettings from './utils/project-settings'
+// import projectSettings from './utils/project-settings'
 
 import Project from '../types/Project'
 import Link from '../types/Link'
@@ -189,13 +189,23 @@ export default async (
     ...staredShortcutMenuItems,
     separator({ visible: subTitle || staredShortcutMenuItems.length > 0 }),
     {
-      label: 'Change project',
+      label: 'Activate project',
       submenu: [
         ...orderedProjects.map((p: Project) =>
           buildProjectMenuItem(activeProject, p, selectProject)
         ),
         separator({ visible: false }),
         { label: 'Other project', visible: false },
+        {
+          label: 'Deactivate current project',
+          visible: activeProject !== undefined,
+          click: async () => {
+            db.active = null
+            await saveDb(db)
+            refresh()
+          },
+          icon: path.join(__dirname, `../../assets/ranks/invisible.png`),
+        },
       ],
     },
     separator(),
@@ -219,7 +229,7 @@ export default async (
     // },
     separator(),
     {
-      label: 'Open Project Page',
+      label: 'Project Page',
       click: () => {
         activeProject?.configFilepaths.forEach((filepath: string) => {
           shell.openExternal(
@@ -230,7 +240,7 @@ export default async (
       visible: activeProject,
     },
     {
-      label: 'Open Global Settings',
+      label: 'Settings',
       click: () => {
         shell.openExternal(`vscode://file${settingsFilename}`)
       },
@@ -262,6 +272,7 @@ export default async (
       click: async () => {
         createWindow()
       },
+      visible: false,
     },
   ])
 
