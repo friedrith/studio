@@ -38,4 +38,12 @@ export default class GenericTimeTracker extends Plugin {
   async init() {
     this.db = await this.getPluginDataBase([])
   }
+
+  async start() {}
+
+  async stop() {}
+
+  currentTaskDuration(): string {
+    return '00:00'
+  }
 }

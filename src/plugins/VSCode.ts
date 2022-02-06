@@ -28,7 +28,7 @@ export default class VSCode extends Plugin {
     })
 
     const workspaceName = (project?.alias || project?.name || '')
-      .replace(/(\s|\/)/, '-')
+      .replace(/(\s|\/)/g, '-')
       .toLowerCase()
 
     const workspaceFilename = path.join(
@@ -42,7 +42,7 @@ export default class VSCode extends Plugin {
 
     this.savePluginDatabase(this.database)
 
-    this.reload()
+    this.emitReloadUi()
   }
 
   // eslint-disable-next-line class-methods-use-this

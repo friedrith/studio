@@ -10,11 +10,15 @@ import { generateFilename, getJsonFile } from '../utils/json-file'
 
 const exec = util.promisify(child_process.exec)
 
+interface Folder {
+  path: string
+}
+
 export default class VSCode extends Plugin {
   database: any
 
   constructor() {
-    super('studio.terminal')
+    super('studio.iterm')
     this.scopes = ['links']
   }
 
@@ -45,13 +49,12 @@ export default class VSCode extends Plugin {
     )
 
     const terminals = folders
-      .map((f) => path.resolve(realWorkspaceFilename, f.path))
-      .map((f) => ({
-        label: path.basename(f),
+      .map((f: Folder) => path.resolve(realWorkspaceFilename, f.path))
+      .map((dirname: string) => ({
+        label: path.basename(dirname),
         click: async () => {
-          console.log('exec', f)
           try {
-            await exec(`open -a iTerm "${f.replace(/\s/, '\\ ')}"`)
+            await exec(`open -a iTerm "${dirname.replace(/\s/, '\\ ')}"`)
           } catch (error) {
             console.log('error', error)
           }

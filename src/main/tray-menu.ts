@@ -41,6 +41,7 @@ const buildLinkMenuItem = (link: Link): any => ({
     if (link.href?.startsWith('file://')) {
       await shell.openPath(link.href.replace('file://', ''))
     } else if (link.href) {
+      console.log('href', link.href)
       await shell.openExternal(link.href)
     }
     if (link.clipboard) {
@@ -189,23 +190,23 @@ export default async (
     ...staredShortcutMenuItems,
     separator({ visible: subTitle || staredShortcutMenuItems.length > 0 }),
     {
-      label: 'Activate project',
+      label: 'Projects',
       submenu: [
         ...orderedProjects.map((p: Project) =>
           buildProjectMenuItem(activeProject, p, selectProject)
         ),
         separator({ visible: false }),
-        { label: 'Other project', visible: false },
-        {
-          label: 'Deactivate current project',
-          visible: activeProject !== undefined,
-          click: async () => {
-            db.active = null
-            await saveDb(db)
-            refresh()
-          },
-          icon: path.join(__dirname, `../../assets/ranks/invisible.png`),
-        },
+        // { label: 'Other project', visible: false },
+        // {
+        //   label: 'Deactivate current project',
+        //   visible: activeProject !== undefined,
+        //   click: async () => {
+        //     db.active = null
+        //     await saveDb(db)
+        //     refresh()
+        //   },
+        //   icon: path.join(__dirname, `../../assets/ranks/invisible.png`),
+        // },
       ],
     },
     separator(),
@@ -232,9 +233,12 @@ export default async (
       label: 'Project Page',
       click: () => {
         activeProject?.configFilepaths.forEach((filepath: string) => {
+          // console.log('open PRoject page')
           shell.openExternal(
             `obsidian://open?path=${filepath.replace('.md', '')}`
           )
+
+          // shell.openPath(filepath)
         })
       },
       visible: activeProject,
@@ -242,7 +246,9 @@ export default async (
     {
       label: 'Settings',
       click: () => {
-        shell.openExternal(`vscode://file${settingsFilename}`)
+        shell.openPath(settingsFilename)
+
+        // shell.openExternal(`vscode://file${settingsFilename}`)
       },
     },
     // {

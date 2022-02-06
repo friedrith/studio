@@ -102,6 +102,7 @@ export default class MarkdownWorkspacesLoader extends Plugin {
           return
         }
         const project = await parseProject(filePath)
+
         if (isInvalid(project)) {
           return
         }

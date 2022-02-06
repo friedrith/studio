@@ -3121,10 +3121,10 @@ depd@^1.1.2, depd@~1.1.2:
   resolved "https://registry.npmjs.org/depd/-/depd-1.1.2.tgz"
   integrity sha1-m81S4UwJd2PnSbJ0xDRu0uVgtak=
 
-desktop-deep-link@^1.4.2:
-  version "1.4.2"
-  resolved "https://registry.yarnpkg.com/desktop-deep-link/-/desktop-deep-link-1.4.2.tgz#d59a347de12af2a431f55edf53815eec3f4e848b"
-  integrity sha512-IzuxaaCl0L7wY/t/qN/Q1fLr7rWbVaq7HDEZj6Wzv0rdQsDwRLO7Utz4n1Kze7Pwo404CieP9/zcYYCPAxEZ1Q==
+desktop-deep-link@^1.5.1:
+  version "1.5.1"
+  resolved "https://registry.yarnpkg.com/desktop-deep-link/-/desktop-deep-link-1.5.1.tgz#59d9dd362e0e8aa73b760595a1c1b0967de22a4e"
+  integrity sha512-Q8VBnu8dPf/zukaqjCsJM5PcUHzWHmptFqli5LlXhGPGtTWMy/Rgs7yuwWj92odNXpbcgPhGjD2BXwPhikH2FQ==
 
 destroy@~1.0.4:
   version "1.0.4"
