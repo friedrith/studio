@@ -18,7 +18,9 @@ export default class Project {
 
   stared: boolean = false
 
-  projects: Array<Project> = []
+  children: Array<Project> = []
+
+  parent: Project | undefined
 
   rank: ProjectRank = ProjectRank.Common
 

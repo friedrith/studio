@@ -17,6 +17,7 @@ import {
 } from './project-file'
 
 import { onlyMarkdown, projectFileRegex } from './workspaces'
+import findParenthood from './find-parenthood'
 
 const ignoreDotfiles = /(^|[\/\\])\../
 
@@ -50,6 +51,7 @@ export default class MarkdownLoader extends Loader {
   }
 
   addProject(project: Project) {
+    findParenthood(project, this.projects)
     this.projects.push(project)
     this.emitReloadUi()
   }
