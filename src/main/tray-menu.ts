@@ -16,7 +16,7 @@ const isNotStared = (link: Link) => !isStared(link)
 
 const isStartedShortcutPlugin =
   (pluginOptions: PluginOptions) => (plugin: Plugin) =>
-    (pluginOptions.staredShortcuts || []).includes(plugin.id)
+    (pluginOptions.staredActions || []).includes(plugin.id)
 const isNotStartedShortcutPlugin =
   (pluginOptions: PluginOptions) => (plugin: Plugin) =>
     !isStartedShortcutPlugin(pluginOptions)(plugin)
@@ -41,7 +41,6 @@ const buildLinkMenuItem = (link: Link): any => ({
     if (link.href?.startsWith('file://')) {
       await shell.openPath(link.href.replace('file://', ''))
     } else if (link.href) {
-      console.log('href', link.href)
       await shell.openExternal(link.href)
     }
     if (link.clipboard) {
@@ -80,7 +79,7 @@ const buildShortcutMenuItems = async (
   pluginOptions: PluginOptions
 ) => {
   const promise = plugins
-    .filter(Plugin.onlyScope('shortcuts'))
+    .filter(Plugin.onlyScope('actions'))
     .map((plugin: Plugin) => plugin.createShortcut(pluginOptions))
 
   return (await Promise.all(promise)).filter((item) => item.label)
@@ -218,7 +217,7 @@ export default async (
     },
     separator(),
     {
-      label: 'Shortcuts',
+      label: 'Actions',
       submenu: notStaredShortcutMenuItems,
       visible: notStaredShortcutMenuItems.length > 0,
     },

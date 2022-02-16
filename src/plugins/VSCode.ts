@@ -11,7 +11,7 @@ export default class VSCode extends Plugin {
 
   constructor() {
     super('studio.vscode')
-    this.scopes = ['shortcuts', 'links']
+    this.scopes = ['actions', 'links']
   }
 
   async init() {

@@ -32,7 +32,7 @@ export default class GenericTimeTracker extends Plugin {
 
   constructor(id: string, scopes: Array<string>) {
     super(id)
-    this.scopes = ['shortcuts', 'data', ...scopes]
+    this.scopes = ['actions', 'data', ...scopes]
   }
 
   async init() {

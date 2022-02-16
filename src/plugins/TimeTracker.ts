@@ -34,7 +34,7 @@ export default class TimeTracker extends Plugin {
   constructor() {
     super('studio.time-tracker')
     this.chrono = 0
-    this.scopes = ['shortcuts', 'data']
+    this.scopes = ['actions', 'data']
   }
 
   async init() {

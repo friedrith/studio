@@ -1,10 +1,12 @@
+import Workspace from './Workspace'
+
 interface Settings {
   menuTitle: string
   subTitle: string
-  workspaces: Array<string>
+  workspaces: Array<Workspace>
   showRefresh: boolean
   editor: string
-  staredShortcuts: Array<string>
+  staredActions: Array<string>
   pluginsEnabled: Array<string>
 }
 
