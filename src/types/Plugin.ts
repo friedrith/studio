@@ -6,6 +6,7 @@ import { generateFilename, getJsonFile, saveJsonFile } from '../utils/json-file'
 import { getSettings } from '../main/utils/settings'
 
 import Link from './Link'
+import Shortcut from './Shortcut'
 import PluginOptions from './PluginOptions'
 import Settings from './Settings'
 import Project from './Project'
@@ -20,7 +21,7 @@ export default class Plugin extends EventEmitter {
   constructor(id: string) {
     super()
     this.id = id
-    this.databaseFilename = generateFilename(this.id)
+    this.databaseFilename = generateFilename(`${this.id}.db`)
 
     this.scopes = []
   }
@@ -31,13 +32,12 @@ export default class Plugin extends EventEmitter {
     this.emit('reload-tray')
   }
 
-  async createShortcut(_pluginOptions: PluginOptions) {
-    return { label: null }
+  async createShortcut(_pluginOptions: PluginOptions): Promise<Shortcut> {
+    return { label: '' }
   }
 
-  // eslint-disable-next-line
-  async getData(pluginOptions: PluginOptions): Promise<PluginOptions> {
-    return { ...pluginOptions }
+  getContext(_: PluginOptions): any {
+    return {}
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -70,13 +70,4 @@ export default class Plugin extends EventEmitter {
   getProjects(): Array<Project> {
     return []
   }
-
-  // static transformLinks(plugins: Array<Plugin>, links: Array<Link>) {
-  //   return plugins
-  //     .filter(Plugin.onlyScope('links'))
-  //     .reduce(
-  //       (acc: Array<Link>, plugin: Plugin) => plugin.transformLinks(acc),
-  //       links
-  //     )
-  // }
 }

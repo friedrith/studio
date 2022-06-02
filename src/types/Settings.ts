@@ -1,13 +1,7 @@
-import Workspace from './Workspace'
+import GlobalSettings from './GlobalSettings'
 
-interface Settings {
-  menuTitle: string
-  subTitle: string
-  workspaces: Array<Workspace>
-  showRefresh: boolean
-  editor: string
-  staredActions: Array<string>
-  pluginsEnabled: Array<string>
+interface Settings extends GlobalSettings {
+  plugins: { [id: string]: any }
 }
 
 export default Settings

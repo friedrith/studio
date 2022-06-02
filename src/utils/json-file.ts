@@ -12,5 +12,5 @@ export const getJsonFile = (filename: string, defaultData: any): any =>
     .then((data) => ({ ...defaultData, ...data }))
     .catch(() => defaultData)
 
-export const saveJsonFile = (filename: string, data: string) =>
+export const saveJsonFile = (filename: string, data: any) =>
   fs.writeFile(filename, JSON.stringify(data, null, `\t`))

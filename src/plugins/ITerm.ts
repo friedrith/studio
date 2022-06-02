@@ -33,7 +33,7 @@ export default class VSCode extends Plugin {
       return Promise.resolve(links)
     }
 
-    const filename = generateFilename('studio.vscode')
+    const filename = generateFilename('studio.vscode.db')
     const content = await await getJsonFile(filename, {})
     const workspaceFilename =
       content?.workspaceByProjectId[activeProject?.id] || ''

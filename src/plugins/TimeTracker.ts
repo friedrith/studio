@@ -4,15 +4,16 @@ import ejs from 'ejs'
 import Plugin from '../types/Plugin'
 import Project from '../types/Project'
 import PluginOptions from '../types/PluginOptions'
+// import GlobalContext from '../types/GlobalContext'
 
-interface TimeTrackerOptions extends PluginOptions {
-  isTracking: boolean
-  currentTracking: (format: string) => string
-  dayProjectTracking: (format: string) => string
-  weekProjectTracking: (format: string) => string
-  dayTracking: (format: string) => string
-  weekTracking: (format: string) => string
-}
+// interface TimeTrackerContext extends GlobalContext {
+//   isTracking: boolean
+//   currentTracking: (format: string) => string
+//   dayProjectTracking: (format: string) => string
+//   weekProjectTracking: (format: string) => string
+//   dayTracking: (format: string) => string
+//   weekTracking: (format: string) => string
+// }
 
 const formatDuration = (duration: number, format: string) => {
   return Duration.fromMillis(duration).toFormat(format)
@@ -34,7 +35,7 @@ export default class TimeTracker extends Plugin {
   constructor() {
     super('studio.time-tracker')
     this.chrono = 0
-    this.scopes = ['actions', 'data']
+    this.scopes = ['shortcuts', 'data']
   }
 
   async init() {
@@ -211,17 +212,17 @@ export default class TimeTracker extends Plugin {
     }
   }
 
-  async getData(data: PluginOptions): Promise<TimeTrackerOptions> {
-    await this.setActiveProject(data.activeProject)
+  // async getContext(data: PluginOptions): Promise<TimeTrackerContext> {
+  //   await this.setActiveProject(data.activeProject)
 
-    return {
-      ...data,
-      isTracking: Boolean(this.startDate),
-      currentTracking: (format: string) => this.currentTracking(format),
-      dayProjectTracking: (format: string) => this.dayProjectTracking(format),
-      weekProjectTracking: (format: string) => this.weekProjectTracking(format),
-      dayTracking: (format: string) => this.dayTracking(format),
-      weekTracking: (format: string) => this.weekTracking(format),
-    }
-  }
+  //   return {
+  //     ...data,
+  //     isTracking: Boolean(this.startDate),
+  //     currentTracking: (format: string) => this.currentTracking(format),
+  //     dayProjectTracking: (format: string) => this.dayProjectTracking(format),
+  //     weekProjectTracking: (format: string) => this.weekProjectTracking(format),
+  //     dayTracking: (format: string) => this.dayTracking(format),
+  //     weekTracking: (format: string) => this.weekTracking(format),
+  //   }
+  // }
 }

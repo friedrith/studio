@@ -1,6 +1,6 @@
 import path from 'path'
 import chokidar from 'chokidar'
-import { FSWatcher } from 'fs'
+import { FSWatcher, existsSync } from 'fs'
 
 import Project from '../../types/Project'
 
@@ -55,8 +55,6 @@ export default class MarkdownLoader extends Loader {
     this.projects.push(project)
     this.emitReloadUi()
   }
-
-  addIdTo
 
   async init(settings: Settings) {
     const { workspaces } = settings
@@ -116,6 +114,20 @@ export default class MarkdownLoader extends Loader {
         logger.info(`File ${filePath} has been removed`)
 
         this.removeProject(filePath)
+      })
+      .on('unlinkDir', (dirPath: string) => {
+        logger.info(`File ${dirPath} has been removed`)
+
+        this.removeProject(path.join(dirPath, 'README.md'))
+      })
+      .on('raw', (event) => {
+        if (event === 'moved') {
+          this.projects.forEach((project) => {
+            if (!existsSync(project.path)) {
+              this.removeProject(project)
+            }
+          })
+        }
       })
   }
 

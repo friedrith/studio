@@ -1,6 +1,7 @@
 interface Database {
-  active: string;
-  mostRecentUsedProjects: Array<string>;
+  workspaces: string[]
+  active: string
+  mostRecentUsedProjects: Array<string>
 }
 
 export default Database

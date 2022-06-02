@@ -5,7 +5,7 @@ import Link from './Link'
 export default class GenericTaskManager extends Plugin {
   constructor(id: string, scopes: Array<string> = []) {
     super(id)
-    this.scopes = ['actions', 'editor', ...scopes]
+    this.scopes = ['shortcuts', 'editor', ...scopes]
   }
 
   askToAddTaskManagerProjectToProjectPage(link: Link) {

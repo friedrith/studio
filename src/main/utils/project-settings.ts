@@ -8,6 +8,7 @@ import {
   saveJsonFile,
 } from '../../utils/json-file'
 
+// TODO: is it used?
 class ProjectSettings extends EventEmitter {
   watches: any
 

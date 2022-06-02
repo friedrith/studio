@@ -9,3 +9,6 @@ export default interface Link {
   submenu?: MenuItemConstructorOptions
   click?: () => void
 }
+
+export const isStaredLink = (link: Link) => link.stared
+export const isUnstaredLink = (link: Link) => !isStaredLink(link)

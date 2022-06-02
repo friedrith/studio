@@ -12,4 +12,4 @@ const defaultDb = {
 
 export const getDb = () => getJsonFile(dbFilename, defaultDb)
 
-export const saveDb = (config: string) => saveJsonFile(dbFilename, config)
+export const saveDb = (config: any) => saveJsonFile(dbFilename, config)

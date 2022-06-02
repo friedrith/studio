@@ -31,7 +31,7 @@ import generateMenu from './tray-menu'
 import MenuBuilder from './menu'
 import { resolveHtmlPath } from './util'
 
-const icon = path.join(__dirname, '../../assets/icons/24x24.png')
+const icon = path.join(__dirname, '../../assets/logo/logoTemplate.png')
 
 export default class AppUpdater {
   constructor() {

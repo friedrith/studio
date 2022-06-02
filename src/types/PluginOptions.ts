@@ -1,9 +1,12 @@
 import Project from './Project'
-import Settings from './Settings'
+import GlobalSettings from './GlobalSettings'
 
-interface PluginOptions extends Settings {
-  activeProject: Project | undefined;
-  projects: Array<Project>;
+interface PluginOptions extends GlobalSettings {
+  activeProject: Project | undefined
+  projects: Array<Project>
+  plugin: any
 }
 
 export default PluginOptions
+
+export type PluginOptionsMap = { [id: string]: PluginOptions }

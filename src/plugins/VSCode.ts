@@ -11,7 +11,7 @@ export default class VSCode extends Plugin {
 
   constructor() {
     super('studio.vscode')
-    this.scopes = ['actions', 'links']
+    this.scopes = ['shortcuts', 'links']
   }
 
   async init() {
@@ -56,6 +56,7 @@ export default class VSCode extends Plugin {
     return {
       label: 'Create VS Code Workspace',
       enabled: !this.database?.workspaceByProjectId[activeProject?.id],
+      oneShot: true,
       click: async () => {
         await this.generateWorkspace(activeProject)
       },

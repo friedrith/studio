@@ -5,6 +5,7 @@ import GenericTaskManager from '../types/GenericTaskManager'
 import PluginOptions from '../types/PluginOptions'
 import Project from '../types/Project'
 import Link from '../types/Link'
+import Shortcut from '../types/Shortcut'
 
 // const hasTodoistLink = (project: Project) =>
 //   (project.links || []).some((l: Link) =>
@@ -22,7 +23,6 @@ const ID = 'studio.todoist'
 
 const findParentProjectTodoistId = (project: Project) => {
   if (!project.parent) {
-    console.log('no parent')
     return null
   }
 
@@ -43,7 +43,7 @@ export default class Todoist extends GenericTaskManager {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  async createShortcut(pluginOptions: PluginOptions): Promise<any> {
+  async createShortcut(pluginOptions: PluginOptions): Promise<Shortcut> {
     const { activeProject } = pluginOptions
 
     if (!activeProject) {
@@ -53,10 +53,9 @@ export default class Todoist extends GenericTaskManager {
     return {
       label: 'Create Todoist Project',
       enabled: !findTodoistId(activeProject),
+      oneShot: true,
       click: async () => {
         const parentId = findParentProjectTodoistId(activeProject)
-
-        console.log('parentId', parentId)
 
         // https://developer.todoist.com/sync/v8/#add-a-project
         const project = await this.todoist.projects.add({
@@ -73,8 +72,6 @@ export default class Todoist extends GenericTaskManager {
         }
 
         await shell.openExternal(link.href)
-
-        console.log('link', link)
 
         this.askToAddTaskManagerProjectToProjectPage(link)
       },
